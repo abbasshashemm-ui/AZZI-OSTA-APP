@@ -3,6 +3,7 @@ import { aiPartialMatches } from '../data/archiveItems'
 import {
   analyzeGarmentImage,
   getGeminiErrorMessage,
+  isNoMatchError,
 } from '../lib/geminiAnalysis'
 import ImageWithSkeleton from './ImageWithSkeleton'
 import './AILookFinder.css'
@@ -40,6 +41,7 @@ export default function AILookFinder({ onMatchComplete, simplified = false }) {
   const [resultRevealed, setResultRevealed] = useState(false)
   const [matchResult, setMatchResult] = useState(null)
   const [analysisError, setAnalysisError] = useState(null)
+  const [isNoMatch, setIsNoMatch] = useState(false)
 
   const fileInputRef = useRef(null)
   const videoRef = useRef(null)
@@ -64,6 +66,7 @@ export default function AILookFinder({ onMatchComplete, simplified = false }) {
     setResultRevealed(false)
     setMatchResult(null)
     setAnalysisError(null)
+    setIsNoMatch(false)
 
     try {
       const result = await analyzeGarmentImage(file)
@@ -71,6 +74,7 @@ export default function AILookFinder({ onMatchComplete, simplified = false }) {
       setAnalysisState('complete')
       setResultRevealed(true)
     } catch (error) {
+      setIsNoMatch(isNoMatchError(error))
       setAnalysisError(getGeminiErrorMessage(error))
       setAnalysisState('error')
       setResultRevealed(true)
@@ -355,7 +359,9 @@ export default function AILookFinder({ onMatchComplete, simplified = false }) {
 
           {analysisState === 'error' && (
             <div className="look-finder__error" role="alert">
-              <p className="look-finder__error-title">Vision Analysis Unavailable</p>
+              <p className="look-finder__error-title">
+                {isNoMatch ? 'No Archive Match Found' : 'Vision Analysis Unavailable'}
+              </p>
               <p className="look-finder__error-message">{analysisError}</p>
               {lastAnalyzedFileRef.current && (
                 <button

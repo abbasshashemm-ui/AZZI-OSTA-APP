@@ -6,73 +6,65 @@ export const GEMINI_API_KEY =
 
 const GEMINI_TIMEOUT_MS = 45_000
 const MODEL_ID = 'gemini-2.5-flash'
+const MIN_MATCH_CONFIDENCE = 85
 
-const COLLECTION_DICTIONARY_STRING = `
-- ITEM 1:
-  SKU: AO-24-HC-01
-  Year: 2024
-  Category: Haute Couture
-  Description: Asymmetrical architectural silhouette with sculptural structural boning beneath hand-corded Chantilly lace.
-  Image_File: 1.jpg
+const VALID_SKUS = archiveItems.map((item) => item.code)
 
-- ITEM 2:
-  SKU: AO-23-HC-05
-  Year: 2023
-  Category: Haute Couture
-  Description: Structured column with vermilion silk tulle wrap and hand-applied micro-sequin tessellation.
-  Image_File: 2.jpg
+function buildCatalogueBlock() {
+  return archiveItems
+    .map(
+      (item, index) => `
+ITEM ${index + 1}:
+  SKU: ${item.code}
+  Name: ${item.name}
+  Year: ${item.year}
+  Category: ${item.category}
+  Silhouette/Details: ${item.detailTag}
+  Description: ${item.description}
+  Fabrics: ${item.fabrics}`,
+    )
+    .join('\n')
+}
 
-- ITEM 3:
-  SKU: AO-24-HC-08
-  Year: 2024
-  Category: Haute Couture
-  Description: Balloon-sleeve bodice with jeweled talisman appliqué over a sculpted silk crepe column skirt.
-  Image_File: 3.jpg
+const ANALYSIS_PROMPT = `You are a strict archival garment identifier for luxury fashion house Azzi & Osta. Your job is EXACT IDENTIFICATION, not recommendation or similarity ranking.
 
-- ITEM 4:
-  SKU: AO-24-HC-12
-  Year: 2024
-  Category: Haute Couture
-  Description: Hand-cut silk petal appliqué on a structured mini silhouette with voluminous silk gazar cape.
-  Image_File: 4.jpg
+Compare the uploaded garment image against ONLY these ${archiveItems.length} archived looks:
+${buildCatalogueBlock()}
 
-- ITEM 5:
-  SKU: AO-23-HC-08
-  Year: 2023
-  Category: Haute Couture
-  Description: Architectural wing-lapel bolero with 3D petal embroidery over a voluminous silk gazar A-line.
-  Image_File: 5.jpg
+RULES (follow exactly):
+1. Return matched=true ONLY if the uploaded image depicts the SAME physical garment as one catalogue entry — same silhouette, construction, fabric treatment, and distinctive design details.
+2. "Similar style", "same category", "closest match", or "resembles" is NOT sufficient. If you are unsure, return matched=false.
+3. Do NOT guess. Do NOT pick the best or closest item when no exact match exists.
+4. Non-fashion images, garments not in this catalogue, unusable photos, or images where the garment is not clearly visible → matched=false.
+5. confidence is your certainty that this is an EXACT match (0-100). If confidence would be below ${MIN_MATCH_CONFIDENCE}, return matched=false.
+6. When matched=true, sku must be exactly one of: ${VALID_SKUS.join(', ')}. When matched=false, sku must be null.`
 
-- ITEM 6:
-  SKU: AO-24-HC-02
-  Year: 2024
-  Category: Haute Couture
-  Description: Tiered silk tulle ruffles with off-shoulder boning and a cinched double-faced crepe bodice.
-  Image_File: 6.jpg
-
-- ITEM 7:
-  SKU: AO-25-RTW-12
-  Year: 2025
-  Category: Ready-to-Wear
-  Description: Double-breasted tailored suit with exaggerated shawl collar and cathedral-length silk tulle train.
-  Image_File: 7.jpg
-
-- ITEM 8:
-  SKU: AO-23-HC-12
-  Year: 2023
-  Category: Haute Couture
-  Description: Strapless mermaid with sculptural ruffle bodice in structured moiré silk and internal corsetry.
-  Image_File: 8.jpg
-`
-
-const ANALYSIS_PROMPT = `You are the internal computer vision archivist for luxury fashion house Azzi & Osta. Look closely at the uploaded image's silhouette, tailoring style, fabric textures, and embroidery patterns. Compare it against this exact archive dictionary: const COLLECTION_DICTIONARY_STRING = \`${COLLECTION_DICTIONARY_STRING}\`
-
-Your response must strictly be valid JSON in this exact format, with no markdown backticks around it:
-{
-  "sku": "MATCHING_SKU",
-  "confidence": "MATCHING_PERCENTAGE",
-  "reasoning": "1-sentence observation about why this matches the silhouette or fabric texture"
-}`
+const RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    matched: {
+      type: 'BOOLEAN',
+      description:
+        'True only when the uploaded image is an exact match to one catalogue garment.',
+    },
+    sku: {
+      type: 'STRING',
+      nullable: true,
+      format: 'enum',
+      enum: VALID_SKUS,
+      description: 'The matched archival SKU when matched=true, otherwise null.',
+    },
+    confidence: {
+      type: 'INTEGER',
+      description: 'Exact-match certainty from 0 to 100.',
+    },
+    reasoning: {
+      type: 'STRING',
+      description: 'One sentence explaining the identification decision.',
+    },
+  },
+  required: ['matched', 'sku', 'confidence', 'reasoning'],
+}
 
 export class GeminiAnalysisError extends Error {
   constructor(userMessage, code, cause) {
@@ -84,6 +76,13 @@ export class GeminiAnalysisError extends Error {
   }
 }
 
+export function isNoMatchError(error) {
+  return (
+    error instanceof GeminiAnalysisError &&
+    (error.code === 'NO_MATCH' || error.code === 'LOW_CONFIDENCE')
+  )
+}
+
 function parseConfidence(value) {
   const numeric = parseInt(String(value ?? '').replace(/[^\d]/g, ''), 10)
   return Number.isFinite(numeric) ? Math.min(100, Math.max(0, numeric)) : 0
@@ -92,6 +91,16 @@ function parseConfidence(value) {
 function getLookLabel(code) {
   const segment = code?.split('-').pop()
   return segment ? `Look ${segment}` : 'Archive Match'
+}
+
+function getReasoning(parsed) {
+  return typeof parsed.reasoning === 'string' && parsed.reasoning.trim()
+    ? parsed.reasoning.trim()
+    : 'No exact match found in the archive catalogue for this image.'
+}
+
+function rejectNoMatch(parsed, code = 'NO_MATCH') {
+  throw new GeminiAnalysisError(getReasoning(parsed), code)
 }
 
 function sanitizeJsonText(text) {
@@ -122,28 +131,37 @@ function parseGeminiPayload(rawText) {
     )
   }
 
-  if (!parsed.sku || typeof parsed.sku !== 'string') {
+  const confidence = parseConfidence(parsed.confidence)
+  const sku =
+    typeof parsed.sku === 'string' && parsed.sku.trim() ? parsed.sku.trim() : null
+
+  if (parsed.matched === false || sku === null) {
+    rejectNoMatch(parsed)
+  }
+
+  if (parsed.matched !== true) {
+    rejectNoMatch(parsed, 'INVALID_MATCH_FLAG')
+  }
+
+  if (confidence < MIN_MATCH_CONFIDENCE) {
     throw new GeminiAnalysisError(
-      'The vision model did not return a matching archival SKU. Please try again.',
-      'MISSING_SKU',
+      `No confident exact match (${confidence}% confidence). This garment may not be in the catalogue.`,
+      'LOW_CONFIDENCE',
     )
   }
 
-  const item = archiveItems.find((entry) => entry.code === parsed.sku)
+  const item = archiveItems.find((entry) => entry.code === sku)
   if (!item) {
     throw new GeminiAnalysisError(
-      `The returned SKU "${parsed.sku}" is not in the archive dictionary. Please scan again.`,
+      `The returned SKU "${sku}" is not in the archive dictionary. Please scan again.`,
       'UNKNOWN_SKU',
     )
   }
 
   return {
     item,
-    confidence: parseConfidence(parsed.confidence),
-    reasoning:
-      typeof parsed.reasoning === 'string' && parsed.reasoning.trim()
-        ? parsed.reasoning.trim()
-        : 'Visual silhouette and fabric texture aligned with the matched archive record.',
+    confidence,
+    reasoning: getReasoning(parsed),
     seasonLabel: item.collectionSeason,
     lookLabel: getLookLabel(item.code),
   }
@@ -286,6 +304,8 @@ async function requestGeminiAnalysis(base64, mimeType) {
       ],
       config: {
         abortSignal: controller.signal,
+        responseMimeType: 'application/json',
+        responseSchema: RESPONSE_SCHEMA,
       },
     })
 
