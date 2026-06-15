@@ -1,0 +1,73 @@
+@import 'tailwindcss';
+
+@theme {
+  --scale-101: 1.01;
+  --color-gold: #c5a07c;
+  --color-muted: #666666;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dashboardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scanBreathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+:root {
+  --black: #0a0a0a;
+  --gold: #c5a07c;
+  --gold-dim: rgba(197, 160, 124, 0.5);
+  --text-muted: #666666;
+  --off-white: #f5f1ea;
+  --text-primary: #f5f1ea;
+  --text-secondary: rgba(245, 241, 234, 0.5);
+  --cream: var(--gold);
+  --border-subtle: rgba(245, 241, 234, 0.1);
+  --border-gold: rgba(197, 160, 124, 0.2);
+
+  --serif: 'Cormorant Garamond', 'Times New Roman', serif;
+  --sans: 'Jost', system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  font-weight: 300;
+  color: var(--text-primary);
+  background-color: var(--black);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+}
