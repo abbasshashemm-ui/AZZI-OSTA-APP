@@ -62,19 +62,6 @@ export default function MobileGlobalHeader({
         </div>
 
         <div className="mgh__end">
-          <nav className="mgh__nav" aria-label="Main navigation">
-            {navViews.map(({ id, label }) => (
-              <button
-                key={id}
-                type="button"
-                className={`mgh__link${activeView === id ? ' mgh__link--active' : ''}`}
-                onClick={() => onViewChange(id)}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
-
           {currentUser && (
             <span
               className="mgh__avatar"
@@ -105,6 +92,23 @@ export default function MobileGlobalHeader({
           </button>
         </div>
       </div>
+
+      {navViews.length > 1 && (
+        <div className="mgh__view-switch" role="tablist" aria-label="Main views">
+          {navViews.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={activeView === id}
+              className={`mgh__view-tab${activeView === id ? ' mgh__view-tab--active' : ''}`}
+              onClick={() => onViewChange(id)}
+            >
+              {id === 'look-finder' ? 'AI Look Finder' : label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isArchive && (
         <div className="mgh__archive animate-fadeIn">
