@@ -195,7 +195,7 @@ export default function AILookFinder({ onMatchComplete, simplified = false }) {
 
   return (
     <div className={`look-finder${simplified ? ' look-finder--simplified' : ''}`}>
-      <header className="look-finder__header">
+      <header className="look-finder__header look-finder__header--desktop">
         <h1 className="look-finder__title">
           {simplified ? 'Floor Look Lookup' : 'AI Look Finder'}
         </h1>

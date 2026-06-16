@@ -6,7 +6,7 @@ import AILookFinder from './AILookFinder'
 import ArchiveCard from './ArchiveCard'
 import CollectionOnboarding from './CollectionOnboarding'
 import ItemDetailPanel from './ItemDetailPanel'
-import MobileFilterBar from './MobileFilterBar'
+import MobileGlobalHeader from './MobileGlobalHeader'
 import Navbar from './Navbar'
 import SettingsPanel from './SettingsPanel'
 import Sidebar from './Sidebar'
@@ -171,10 +171,14 @@ export default function Dashboard() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [permissions.canAddLooks])
 
+  const navView = activeView === 'onboarding' ? 'archive' : activeView
+  const showMobileGlobalHeader =
+    activeView === 'archive' || activeView === 'look-finder'
+
   return (
     <div className="dashboard">
       <Navbar
-        activeView={activeView === 'onboarding' ? 'archive' : activeView}
+        activeView={navView}
         onViewChange={handleViewChange}
         onHome={goHome}
         showMobileBack={showMobileBack}
@@ -182,9 +186,40 @@ export default function Dashboard() {
         onOpenSettings={() => setSettingsOpen(true)}
         visibleViews={visibleViews}
         currentUser={currentUser}
+        hideOnMobile={showMobileGlobalHeader}
       />
 
       <div className="dashboard__body">
+        {showMobileGlobalHeader && (
+          <MobileGlobalHeader
+            activeView={activeView}
+            onViewChange={handleViewChange}
+            onHome={goHome}
+            onOpenSettings={() => setSettingsOpen(true)}
+            showMobileBack={showMobileBack}
+            onBack={handleMobileBack}
+            visibleViews={visibleViews}
+            currentUser={currentUser}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            showFilters={permissions.canUseFilters}
+            selectedYears={selectedYears}
+            selectedCategories={selectedCategories}
+            onToggleYear={(year) =>
+              setSelectedYears((prev) => toggleInList(prev, year))
+            }
+            onToggleCategory={(category) =>
+              setSelectedCategories((prev) => toggleInList(prev, category))
+            }
+            onClearYears={() => setSelectedYears([])}
+            onGoToArchive={
+              permissions.canAccessArchive
+                ? () => handleViewChange('archive')
+                : undefined
+            }
+          />
+        )}
+
         {activeView === 'archive' && permissions.canUseFilters && (
           <Sidebar
             selectedYears={selectedYears}
@@ -206,22 +241,8 @@ export default function Dashboard() {
             showToast={showToast}
           />
         ) : activeView === 'archive' && permissions.canAccessArchive ? (
-          <main className="dashboard__main" id="archive">
-            {permissions.canUseFilters && (
-              <MobileFilterBar
-                selectedYears={selectedYears}
-                selectedCategories={selectedCategories}
-                onToggleYear={(year) =>
-                  setSelectedYears((prev) => toggleInList(prev, year))
-                }
-                onToggleCategory={(category) =>
-                  setSelectedCategories((prev) => toggleInList(prev, category))
-                }
-                onClearYears={() => setSelectedYears([])}
-              />
-            )}
-
-            <div className="dashboard__main-header">
+          <main className="dashboard__main dashboard__main--archive" id="archive">
+            <div className="dashboard__main-header dashboard__archive-desktop-only">
               <div className="dashboard__main-header-left">
                 <h1 className="dashboard__heading">Archive</h1>
                 {permissions.isAdmin && (
@@ -234,7 +255,7 @@ export default function Dashboard() {
             </div>
 
             {!hasActiveFilters && filteredItems.length > HOME_PREVIEW_LIMIT && (
-              <div className="dashboard__preview-hint">
+              <div className="dashboard__preview-hint dashboard__archive-desktop-only">
                 <span className="dashboard__preview-hint-icon" aria-hidden="true">
                   i
                 </span>
@@ -246,7 +267,7 @@ export default function Dashboard() {
               </div>
             )}
 
-            <div className="dashboard__search">
+            <div className="dashboard__search dashboard__archive-desktop-only">
               <label className="dashboard__search-label" htmlFor="archive-search">
                 Archive Lookup
               </label>
@@ -277,7 +298,7 @@ export default function Dashboard() {
             {permissions.canAddLooks && (
               <button
                 type="button"
-                className="dashboard__add-btn transition-all duration-500 ease-out"
+                className="dashboard__add-btn dashboard__archive-desktop-only transition-all duration-500 ease-out"
                 onClick={openOnboarding}
               >
                 + Add New Collection Look
@@ -286,7 +307,7 @@ export default function Dashboard() {
 
             {displayedItems.length > 0 ? (
               <>
-                <div className="archive-grid archive-grid--animate">
+                <div className="archive-grid archive-grid--animate grid grid-cols-2 gap-2 p-2 md:grid-cols-3 lg:grid-cols-4 md:gap-6 md:p-0">
                   {displayedItems.map((item, index) => (
                     <ArchiveCard
                       key={item.id}
@@ -342,12 +363,12 @@ export default function Dashboard() {
               </div>
             )}
           </main>
-        ) : (
+        ) : activeView === 'look-finder' ? (
           <AILookFinder
             onMatchComplete={openItemPanel}
             simplified={permissions.simplifiedScanner}
           />
-        )}
+        ) : null}
       </div>
 
       <ItemDetailPanel

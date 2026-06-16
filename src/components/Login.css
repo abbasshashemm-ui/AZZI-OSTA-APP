@@ -371,21 +371,33 @@
 }
 
 @media (max-width: 720px) {
+  .login__glow {
+    background:
+      radial-gradient(
+        ellipse 55% 45% at 50% 72%,
+        var(--login-glow) 0%,
+        transparent 70%
+      );
+  }
+
   .login__model--hero {
-    left: 50% !important;
-    right: auto !important;
-    width: 120%;
-    transform: translateX(-50%);
+    left: 0 !important;
+    right: 0 !important;
+    width: min(88vw, 21rem);
+    margin-inline: auto;
     justify-content: center;
-    opacity: 0.35;
+    opacity: 0;
+    transform: none;
+    z-index: 0;
   }
 
   .login__model--hero.login__model--active {
-    opacity: 0.42;
+    opacity: 0.5;
+    z-index: 1;
   }
 
-  .login__model--hero img {
-    max-height: 75vh;
+  .login__model--hero.login__model--active img {
+    max-height: min(58vh, 28rem);
   }
 
   .login__caption {
@@ -410,7 +422,7 @@
   }
 
   .login__model--hero.login__model--active {
-    opacity: 1;
+    opacity: 0.55;
   }
 }
 

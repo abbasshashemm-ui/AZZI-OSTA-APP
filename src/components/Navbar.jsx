@@ -12,11 +12,14 @@ export default function Navbar({
   onOpenSettings,
   visibleViews,
   currentUser,
+  hideOnMobile = false,
 }) {
   const navViews = VIEWS.filter((view) => visibleViews.includes(view.id))
 
   return (
-    <header className="navbar">
+    <header
+      className={`navbar${hideOnMobile ? ' navbar--mobile-suppressed' : ''}`}
+    >
       <div className="navbar__start">
         {showMobileBack && (
           <button
