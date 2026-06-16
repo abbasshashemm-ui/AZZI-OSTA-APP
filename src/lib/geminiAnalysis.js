@@ -1,8 +1,7 @@
 import { GoogleGenAI } from '@google/genai'
 import { archiveItems } from '../data/archiveItems'
 
-export const GEMINI_API_KEY =
-  'AQ.Ab8RN6IGWx7ThI_Navgho7Oz0H42zlxQKS0g3osojrzXrNZCKg'
+export const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY ?? ''
 
 const GEMINI_TIMEOUT_MS = 45_000
 const MODEL_ID = 'gemini-2.5-flash'

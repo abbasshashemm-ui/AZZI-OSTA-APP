@@ -7,14 +7,16 @@ import { ToastProvider } from './context/ToastContext'
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoginExiting, setIsLoginExiting] = useState(false)
+  const [sessionRole, setSessionRole] = useState('admin')
 
-  function handleAuthenticate() {
+  function handleAuthenticate(roleId) {
+    setSessionRole(roleId)
     setIsLoginExiting(true)
     setTimeout(() => setIsAuthenticated(true), 700)
   }
 
   return (
-    <div className="relative min-h-svh bg-[var(--black)]">
+    <div className="relative min-h-svh">
       {(isAuthenticated || isLoginExiting) && (
         <div
           className={
@@ -23,7 +25,7 @@ function App() {
               : 'opacity-100'
           }
         >
-          <RoleProvider>
+          <RoleProvider initialRole={sessionRole}>
             <ToastProvider>
               <Dashboard />
             </ToastProvider>

@@ -1,9 +1,10 @@
 import ImageWithSkeleton from './ImageWithSkeleton'
 
-export default function ArchiveCard({ item, onSelect }) {
+export default function ArchiveCard({ item, onSelect, style }) {
   return (
     <article
-      className="archive-card group transition-colors duration-500 ease-out"
+      className="archive-card"
+      style={style}
       onClick={() => onSelect?.(item)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -15,13 +16,15 @@ export default function ArchiveCard({ item, onSelect }) {
       tabIndex={0}
       aria-label={`View ${item.name}`}
     >
-      <ImageWithSkeleton
-        src={item.image}
-        alt={item.name}
-        wrapperClassName="archive-card__image-wrap"
-        imageClassName="transition-transform duration-500 ease-out group-hover:scale-101"
-        aspectClassName="aspect-[2/3] w-full"
-      />
+      <div className="archive-card__image-col">
+        <ImageWithSkeleton
+          src={item.image}
+          alt={item.name}
+          wrapperClassName="archive-card__image-wrap"
+          imageClassName="archive-card__image"
+          aspectClassName="aspect-[2/3] w-full"
+        />
+      </div>
       <div className="archive-card__body">
         <div className="archive-card__meta">
           <span>{item.year}</span>

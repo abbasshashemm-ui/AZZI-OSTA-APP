@@ -1,21 +1,80 @@
-import image1 from '../assets/1.jpg'
-import image2 from '../assets/2.jpg'
-import image3 from '../assets/3.jpg'
-import image4 from '../assets/4.jpg'
-import image5 from '../assets/5.jpg'
-import image6 from '../assets/6.jpg'
-import image7 from '../assets/7.jpg'
-import image8 from '../assets/8.jpg'
+import scrapedRaw from './scrapedCollections.json'
 
-export const CATEGORIES = ['Haute Couture', 'Ready-to-Wear', 'Bridal']
+const legacyImages = import.meta.glob('../assets/[1-8].jpg', {
+  eager: true,
+  import: 'default',
+})
 
-export const YEARS = Array.from({ length: 17 }, (_, i) => 2010 + i)
+const archiveImages = import.meta.glob('../assets/archive/*.{jpg,jpeg,png,webp}', {
+  eager: true,
+  import: 'default',
+})
 
-export const MOBILE_YEAR_PILLS = [2026, 2025, 2024, 2023, 2022, 2021, 2020]
+const COLLECTION_TITLE_NAMES = new Set([
+  'time in bloom',
+  'untamed harmonies',
+  'the sacred spring',
+  'philharmonie astrale',
+  'entre mer et lumière',
+  'entre mer et lumiere',
+  'œuvres rebelles',
+  'oeuvres rebelles',
+  'la matière du vent',
+  'la matiere du vent',
+  'rêve flamand',
+  'reve flamand',
+  'thé au trianon',
+  'the au trianon',
+  'through the lens',
+  'twelve',
+  'act 11',
+  'sequence 10',
+  'volume 9',
+  'drop 15',
+  'new beginnings',
+  'finding forever',
+])
 
-export const archiveItems = [
+function resolveArchiveImage(localImage, fallbackUrl) {
+  if (localImage) {
+    const assetPath = `../assets/${localImage}`
+    if (archiveImages[assetPath]) return archiveImages[assetPath]
+  }
+  return fallbackUrl ?? null
+}
+
+function isCollectionTitle(name) {
+  return COLLECTION_TITLE_NAMES.has(name.trim().toLowerCase())
+}
+
+function isInvalidAsset(item) {
+  const source = `${item.imageUrl ?? ''} ${item.localImage ?? ''}`.toLowerCase()
+  return /arrow-right|g\.gif|woocommerce|pixel\.wp\.com|currency-switcher/.test(source)
+}
+
+const scrapedItems = scrapedRaw
+  .filter((item) => item.localImage && !isCollectionTitle(item.name) && !isInvalidAsset(item))
+  .map((item) => ({
+    id: item.id,
+    code: item.code,
+    name: item.name,
+    year: item.year,
+    category: item.category,
+    detailTag: item.detailTag,
+    description: item.description,
+    collectionSeason: item.collectionSeason,
+    fabrics: item.fabrics,
+    constructionTime: item.constructionTime,
+    patternReference: item.patternReference,
+    collectionName: item.collectionName,
+    image: resolveArchiveImage(item.localImage, item.imageUrl),
+    imageHd: resolveArchiveImage(item.localImage, item.imageHdUrl ?? item.imageUrl),
+  }))
+  .filter((item) => item.image)
+
+const legacyItems = [
   {
-    id: '1',
+    id: 'legacy-1',
     code: 'AO-24-HC-01',
     name: 'Botanical Petal Lace Column',
     year: 2024,
@@ -28,11 +87,12 @@ export const archiveItems = [
       'Hand-Corded Chantilly Lace, Laser-Cut Silk Organza Petals, Nude Double-Faced Crepe',
     constructionTime: '210 Hours of Hand Atelier Craftsmanship',
     patternReference: 'Drawer A / Folder 08',
-    image: image1,
-    imageHd: image1,
+    collectionName: 'Archive Selection',
+    image: legacyImages['../assets/1.jpg'],
+    imageHd: legacyImages['../assets/1.jpg'],
   },
   {
-    id: '2',
+    id: 'legacy-2',
     code: 'AO-23-HC-05',
     name: 'Gilded Geometric Column',
     year: 2023,
@@ -45,11 +105,12 @@ export const archiveItems = [
       'Metallic Gold Silk Gazar, Hand-Applied Micro-Sequins, Double-Faced Crepe Foundation',
     constructionTime: '280 Hours of Hand Atelier Craftsmanship',
     patternReference: 'Drawer A / Folder 05',
-    image: image2,
-    imageHd: image2,
+    collectionName: 'Archive Selection',
+    image: legacyImages['../assets/2.jpg'],
+    imageHd: legacyImages['../assets/2.jpg'],
   },
   {
-    id: '3',
+    id: 'legacy-3',
     code: 'AO-24-HC-08',
     name: 'Medallion Sash Gown',
     year: 2024,
@@ -61,11 +122,12 @@ export const archiveItems = [
     fabrics: 'Silk Zibeline, Heavy Double-Faced Crepe, Hand-Cast Gold-Plated Brass Medallions',
     constructionTime: '280 Hours of Hand Atelier Craftsmanship',
     patternReference: 'Drawer C / Folder 05',
-    image: image3,
-    imageHd: image3,
+    collectionName: 'Archive Selection',
+    image: legacyImages['../assets/3.jpg'],
+    imageHd: legacyImages['../assets/3.jpg'],
   },
   {
-    id: '4',
+    id: 'legacy-4',
     code: 'AO-24-HC-12',
     name: 'Orchid Reverie Architectural Cape',
     year: 2024,
@@ -77,11 +139,12 @@ export const archiveItems = [
     fabrics: 'Silk Gazar, Structured Organza, Hand-Cut Silk Petals',
     constructionTime: '280 Hours of Hand Atelier Craftsmanship',
     patternReference: 'Drawer A / Folder 01',
-    image: image4,
-    imageHd: image4,
+    collectionName: 'Archive Selection',
+    image: legacyImages['../assets/4.jpg'],
+    imageHd: legacyImages['../assets/4.jpg'],
   },
   {
-    id: '5',
+    id: 'legacy-5',
     code: 'AO-23-HC-08',
     name: 'Azure Wing Gown',
     year: 2023,
@@ -93,11 +156,12 @@ export const archiveItems = [
     fabrics: 'Silk Gazar, Structured Silk Satin, Laser-Cut Organza Petals',
     constructionTime: '210 Hours of Hand Atelier Craftsmanship',
     patternReference: 'Drawer B / Folder 03',
-    image: image5,
-    imageHd: image5,
+    collectionName: 'Archive Selection',
+    image: legacyImages['../assets/5.jpg'],
+    imageHd: legacyImages['../assets/5.jpg'],
   },
   {
-    id: '6',
+    id: 'legacy-6',
     code: 'AO-24-HC-02',
     name: 'Citron Cloud Gown',
     year: 2024,
@@ -109,11 +173,12 @@ export const archiveItems = [
     fabrics: 'Multi-Layered Silk Tulle, Structured Double-Faced Crepe, Silk Organza',
     constructionTime: '210 Hours of Hand Atelier Craftsmanship',
     patternReference: 'Drawer C / Folder 01',
-    image: image6,
-    imageHd: image6,
+    collectionName: 'Archive Selection',
+    image: legacyImages['../assets/6.jpg'],
+    imageHd: legacyImages['../assets/6.jpg'],
   },
   {
-    id: '7',
+    id: 'legacy-7',
     code: 'AO-25-RTW-12',
     name: 'Blush Sculpted Suit',
     year: 2025,
@@ -125,11 +190,12 @@ export const archiveItems = [
     fabrics: 'Structured Double-Faced Crepe, Italian Silk Tulle',
     constructionTime: '110 Hours of Hand Atelier Craftsmanship',
     patternReference: 'Drawer A / Folder 14',
-    image: image7,
-    imageHd: image7,
+    collectionName: 'Archive Selection',
+    image: legacyImages['../assets/7.jpg'],
+    imageHd: legacyImages['../assets/7.jpg'],
   },
   {
-    id: '8',
+    id: 'legacy-8',
     code: 'AO-23-HC-12',
     name: 'Crimson Moiré Gown',
     year: 2023,
@@ -141,10 +207,19 @@ export const archiveItems = [
     fabrics: 'Structured Moiré Silk, Silk Gazar Lining, Double-Faced Crepe Interfacing',
     constructionTime: '180 Hours of Hand Atelier Craftsmanship',
     patternReference: 'Drawer A / Folder 01',
-    image: image8,
-    imageHd: image8,
+    collectionName: 'Archive Selection',
+    image: legacyImages['../assets/8.jpg'],
+    imageHd: legacyImages['../assets/8.jpg'],
   },
 ]
+
+export const CATEGORIES = ['Haute Couture', 'Ready-to-Wear', 'Bridal']
+
+export const YEARS = Array.from({ length: 17 }, (_, i) => 2010 + i)
+
+export const MOBILE_YEAR_PILLS = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019]
+
+export const archiveItems = [...legacyItems, ...scrapedItems]
 
 export const aiLookMatch = {
   confidence: 98,
@@ -159,5 +234,5 @@ export const aiPartialMatches = {
     archiveItems.find((item) => item.code === 'AO-23-HC-12'),
     archiveItems.find((item) => item.code === 'AO-23-HC-05'),
     archiveItems.find((item) => item.code === 'AO-23-HC-08'),
-  ],
+  ].filter(Boolean),
 }

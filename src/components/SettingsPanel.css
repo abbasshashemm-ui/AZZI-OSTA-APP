@@ -23,8 +23,9 @@
   right: 0;
   bottom: 0;
   width: min(32rem, 100%);
-  background-color: var(--black);
+  background-color: var(--black-elevated);
   border-left: 1px solid var(--border-subtle);
+  box-shadow: -24px 0 80px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
@@ -158,10 +159,15 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
+  transition:
+    border-color var(--duration-normal) var(--ease-luxury),
+    background-color var(--duration-normal) var(--ease-luxury),
+    transform var(--duration-fast) var(--ease-luxury);
 }
 
 .role-switcher__option:hover {
   border-color: var(--border-gold);
+  transform: translateX(2px);
 }
 
 .role-switcher__option--active {

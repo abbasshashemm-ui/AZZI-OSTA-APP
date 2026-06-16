@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 export const ROLES = [
   {
@@ -26,19 +26,19 @@ export const ROLES = [
 
 export const ROLE_PROFILES = {
   admin: {
-    name: 'George',
+    name: 'Admin',
     roleLabel: 'Atelier Admin',
-    initials: 'G',
+    initials: 'A',
   },
   designer: {
-    name: 'Lina Haddad',
+    name: 'Designer',
     roleLabel: 'Design/Creative User',
-    initials: 'LH',
+    initials: 'D',
   },
   showroom: {
-    name: 'Floor Team - Camera 1',
+    name: 'Showroom',
     roleLabel: 'Showroom Staff',
-    initials: 'FT',
+    initials: 'S',
     useCompactLabel: true,
   },
 }
@@ -71,8 +71,12 @@ function getPermissions(roleId) {
 
 const RoleContext = createContext(null)
 
-export function RoleProvider({ children }) {
-  const [role, setRole] = useState('admin')
+export function RoleProvider({ children, initialRole = 'admin' }) {
+  const [role, setRole] = useState(initialRole)
+
+  useEffect(() => {
+    setRole(initialRole)
+  }, [initialRole])
 
   const activeRole = useMemo(
     () => ROLES.find((r) => r.id === role) ?? ROLES[0],

@@ -12,6 +12,9 @@ import SettingsPanel from './SettingsPanel'
 import Sidebar from './Sidebar'
 import './Dashboard.css'
 
+const HOME_PREVIEW_LIMIT = 24
+const FILTERED_PAGE_SIZE = 50
+
 function toggleInList(list, value) {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
 }
@@ -26,6 +29,22 @@ export default function Dashboard() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [panelOpen, setPanelOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const hasActiveFilters =
+    selectedYears.length > 0 ||
+    selectedCategories.length > 0 ||
+    searchQuery.trim().length > 0
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedYears, selectedCategories, searchQuery])
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [currentPage])
 
   useEffect(() => {
     if (permissions.isShowroom) {
@@ -107,6 +126,31 @@ export default function Dashboard() {
     })
   }, [selectedYears, selectedCategories, searchQuery])
 
+  const totalPages = hasActiveFilters
+    ? Math.max(1, Math.ceil(filteredItems.length / FILTERED_PAGE_SIZE))
+    : 1
+
+  const displayedItems = useMemo(() => {
+    if (!hasActiveFilters) {
+      return filteredItems.slice(0, HOME_PREVIEW_LIMIT)
+    }
+    const start = (currentPage - 1) * FILTERED_PAGE_SIZE
+    return filteredItems.slice(start, start + FILTERED_PAGE_SIZE)
+  }, [filteredItems, hasActiveFilters, currentPage])
+
+  const resultsLabel = useMemo(() => {
+    if (filteredItems.length === 0) return '0 items'
+
+    if (!hasActiveFilters) {
+      const shown = Math.min(HOME_PREVIEW_LIMIT, filteredItems.length)
+      return `Showing ${shown} of ${filteredItems.length} — filter by year to browse all`
+    }
+
+    const start = (currentPage - 1) * FILTERED_PAGE_SIZE + 1
+    const end = Math.min(currentPage * FILTERED_PAGE_SIZE, filteredItems.length)
+    return `Showing ${start}–${end} of ${filteredItems.length}`
+  }, [filteredItems.length, hasActiveFilters, currentPage])
+
   const resetFilters = useCallback(() => {
     setSelectedYears([])
     setSelectedCategories([])
@@ -186,24 +230,48 @@ export default function Dashboard() {
                   </span>
                 )}
               </div>
-              <p className="dashboard__count">
-                {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
-              </p>
+              <p className="dashboard__count">{resultsLabel}</p>
             </div>
+
+            {!hasActiveFilters && filteredItems.length > HOME_PREVIEW_LIMIT && (
+              <div className="dashboard__preview-hint">
+                <span className="dashboard__preview-hint-icon" aria-hidden="true">
+                  i
+                </span>
+                <p className="dashboard__preview-hint-text">
+                  Curated preview of the atelier archive. Select a{' '}
+                  <strong>year</strong> or <strong>category</strong> in the filters to
+                  browse the full collection, 50 looks per page.
+                </p>
+              </div>
+            )}
 
             <div className="dashboard__search">
               <label className="dashboard__search-label" htmlFor="archive-search">
                 Archive Lookup
               </label>
-              <input
-                id="archive-search"
-                type="search"
-                className="dashboard__search-input transition-colors duration-500 ease-out"
-                placeholder="Search SKU, materials, or look title..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoComplete="off"
-              />
+              <div className="dashboard__search-input-wrap">
+                <svg
+                  className="dashboard__search-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3-3" />
+                </svg>
+                <input
+                  id="archive-search"
+                  type="search"
+                  className="dashboard__search-input"
+                  placeholder="Search SKU, materials, or look title..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoComplete="off"
+                />
+              </div>
             </div>
 
             {permissions.canAddLooks && (
@@ -216,16 +284,48 @@ export default function Dashboard() {
               </button>
             )}
 
-            {filteredItems.length > 0 ? (
-              <div className="archive-grid">
-                {filteredItems.map((item) => (
-                  <ArchiveCard
-                    key={item.id}
-                    item={item}
-                    onSelect={openItemPanel}
-                  />
-                ))}
-              </div>
+            {displayedItems.length > 0 ? (
+              <>
+                <div className="archive-grid archive-grid--animate">
+                  {displayedItems.map((item, index) => (
+                    <ArchiveCard
+                      key={item.id}
+                      item={item}
+                      onSelect={openItemPanel}
+                      style={{
+                        animationDelay: `${Math.min(index, 11) * 45}ms`,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {hasActiveFilters && totalPages > 1 && (
+                  <nav
+                    className="dashboard__pagination"
+                    aria-label="Archive pages"
+                  >
+                    <button
+                      type="button"
+                      className="dashboard__pagination-btn"
+                      onClick={() => setCurrentPage((page) => page - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="dashboard__pagination-status">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      className="dashboard__pagination-btn"
+                      onClick={() => setCurrentPage((page) => page + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </nav>
+                )}
+              </>
             ) : (
               <div className="dashboard__empty-state">
                 <p className="dashboard__empty-title">

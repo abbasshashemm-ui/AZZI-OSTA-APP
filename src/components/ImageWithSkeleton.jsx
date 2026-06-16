@@ -16,7 +16,7 @@ export default function ImageWithSkeleton({
       className={`relative overflow-hidden ${aspectClassName} ${wrapperClassName}`}
     >
       <div
-        className={`absolute inset-0 animate-pulse bg-neutral-100/10 transition-opacity duration-500 ${
+        className={`skeleton-luxury absolute inset-0 transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           isLoaded || hasError ? 'opacity-0' : 'opacity-100'
         }`}
         aria-hidden="true"
@@ -27,16 +27,17 @@ export default function ImageWithSkeleton({
           src={src}
           alt={alt}
           loading={loading}
+          decoding="async"
           onLoad={() => setIsLoaded(true)}
           onError={() => setHasError(true)}
-          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           } ${imageClassName}`}
         />
       )}
 
       {hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-neutral-100/5">
+        <div className="absolute inset-0 flex items-center justify-center bg-[rgba(197,160,124,0.03)]">
           <span className="font-[family-name:var(--sans)] text-[0.625rem] uppercase tracking-[0.14em] text-[var(--text-muted)]">
             Image unavailable
           </span>
