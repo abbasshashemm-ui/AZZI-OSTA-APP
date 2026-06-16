@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.125rem 2.5rem;
+  padding: calc(1.125rem + var(--safe-top)) 2.5rem 1.125rem;
   border-bottom: 1px solid var(--border-subtle);
   background: rgba(8, 8, 8, 0.82);
   backdrop-filter: blur(16px);
@@ -475,6 +475,7 @@
   flex-shrink: 0;
   display: none;
   width: 100%;
+  padding-top: var(--safe-top);
   border-bottom: 1px solid var(--border-subtle);
   background: rgba(8, 8, 8, 0.94);
   backdrop-filter: blur(16px);
@@ -982,7 +983,7 @@
   }
 
   .navbar {
-    padding: 1rem 1.25rem;
+    padding: calc(1rem + var(--safe-top)) 1.25rem 1rem;
   }
 
   .navbar__back {

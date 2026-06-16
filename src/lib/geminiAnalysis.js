@@ -117,7 +117,7 @@ function parseGeminiPayload(rawText) {
     parsed = JSON.parse(sanitizeJsonText(rawText))
   } catch (error) {
     throw new GeminiAnalysisError(
-      'The vision model returned a malformed response. Please scan the garment again.',
+      'We could not read this image clearly. Please scan again.',
       'MALFORMED_JSON',
       error,
     )
@@ -125,7 +125,7 @@ function parseGeminiPayload(rawText) {
 
   if (!parsed || typeof parsed !== 'object') {
     throw new GeminiAnalysisError(
-      'The vision model response was empty or unreadable. Please try another image.',
+      'We could not process this image. Please try another photo.',
       'INVALID_PAYLOAD',
     )
   }
@@ -152,7 +152,7 @@ function parseGeminiPayload(rawText) {
   const item = archiveItems.find((entry) => entry.code === sku)
   if (!item) {
     throw new GeminiAnalysisError(
-      `The returned SKU "${sku}" is not in the archive dictionary. Please scan again.`,
+      'This look could not be matched in the archive. Please scan again.',
       'UNKNOWN_SKU',
     )
   }
@@ -171,7 +171,7 @@ function mapTransportError(error) {
 
   if (error?.name === 'AbortError') {
     return new GeminiAnalysisError(
-      'Vision analysis timed out. Try again with a smaller image or a stronger connection.',
+      'The scan took too long. Try again with a clearer photo or a stronger connection.',
       'TIMEOUT',
       error,
     )
@@ -181,7 +181,7 @@ function mapTransportError(error) {
 
   if (status === 401 || status === 403) {
     return new GeminiAnalysisError(
-      'Unable to authenticate with the vision service. Verify the Gemini API key is active.',
+      'We could not complete the scan right now. Please try again in a moment.',
       'AUTH',
       error,
     )
@@ -189,7 +189,7 @@ function mapTransportError(error) {
 
   if (status === 429) {
     return new GeminiAnalysisError(
-      'The vision service is temporarily rate-limited. Wait a moment and try again.',
+      'The scanner is busy. Please wait a moment and try again.',
       'RATE_LIMIT',
       error,
     )
@@ -197,7 +197,7 @@ function mapTransportError(error) {
 
   if (status >= 500) {
     return new GeminiAnalysisError(
-      'The vision service is temporarily unavailable. Please retry in a few moments.',
+      'The scanner is temporarily unavailable. Please try again shortly.',
       'SERVER',
       error,
     )
@@ -211,7 +211,7 @@ function mapTransportError(error) {
     message.includes('permission denied')
   ) {
     return new GeminiAnalysisError(
-      'The Gemini API key appears invalid or expired. Check your credentials and retry.',
+      'The scanner is not available right now. Please try again later.',
       'AUTH',
       error,
     )
@@ -223,14 +223,14 @@ function mapTransportError(error) {
     message.includes('networkerror')
   ) {
     return new GeminiAnalysisError(
-      'Network connection was interrupted. Check your internet and try again.',
+      'Connection was interrupted. Check your internet and try again.',
       'NETWORK',
       error,
     )
   }
 
   return new GeminiAnalysisError(
-    'An unexpected error occurred during vision analysis. Please try again.',
+    'Something went wrong during the scan. Please try again.',
     'UNKNOWN',
     error,
   )
@@ -285,7 +285,7 @@ function readImageAsBase64(file) {
 async function requestGeminiAnalysis(base64, mimeType) {
   if (!GEMINI_API_KEY?.trim()) {
     throw new GeminiAnalysisError(
-      'The Gemini API key is not configured for this environment.',
+      'The look scanner is not set up yet. Please contact your administrator.',
       'MISSING_KEY',
     )
   }
@@ -311,7 +311,7 @@ async function requestGeminiAnalysis(base64, mimeType) {
     const rawText = response.text
     if (!rawText?.trim()) {
       throw new GeminiAnalysisError(
-        'The vision model returned no analysis text. Please scan again.',
+        'We could not identify this look. Please scan again.',
         'EMPTY_RESPONSE',
       )
     }
@@ -348,5 +348,5 @@ export async function analyzeGarmentImage(file) {
 export function getGeminiErrorMessage(error) {
   if (error instanceof GeminiAnalysisError) return error.userMessage
   if (error instanceof Error && error.message) return error.message
-  return 'Unable to complete AI analysis. Please try again.'
+  return 'We could not complete the scan. Please try again.'
 }

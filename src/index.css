@@ -113,6 +113,11 @@
   --scrollbar-size: 5px;
   --scrollbar-thumb: rgba(197, 160, 124, 0.28);
   --scrollbar-thumb-hover: rgba(197, 160, 124, 0.52);
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 *,
@@ -252,4 +257,17 @@ body::before {
   );
   background-size: 200% 100%;
   animation: shimmerLuxury 1.8s ease-in-out infinite;
+}
+
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .mgh__search,
+  .dashboard__search-input {
+    font-size: 16px;
+  }
 }

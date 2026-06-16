@@ -352,7 +352,7 @@ export default function AILookFinder({ onMatchComplete, simplified = false }) {
               <div className="look-finder__skeleton-line" />
               <div className="look-finder__skeleton-line look-finder__skeleton-line--short" />
               <p className="look-finder__skeleton-text">
-                Gemini is analyzing silhouette and fabric textures...
+                Analyzing silhouette and fabric details...
               </p>
             </div>
           )}
@@ -360,7 +360,7 @@ export default function AILookFinder({ onMatchComplete, simplified = false }) {
           {analysisState === 'error' && (
             <div className="look-finder__error" role="alert">
               <p className="look-finder__error-title">
-                {isNoMatch ? 'No Archive Match Found' : 'Vision Analysis Unavailable'}
+                {isNoMatch ? 'No Archive Match Found' : 'Unable to Scan Look'}
               </p>
               <p className="look-finder__error-message">{analysisError}</p>
               {lastAnalyzedFileRef.current && (
